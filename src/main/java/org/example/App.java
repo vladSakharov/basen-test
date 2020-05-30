@@ -30,7 +30,6 @@ public class App extends AbstractVerticle {
         mapper.registerSubtypes(User.class);
         mapper.registerSubtypes(Account.class);
 
-        //addRandomStuff();
         Router router = Router.router(vertx);
         router.route("/api/entities*").handler(BodyHandler.create());
         router.get("/api/entities").handler(this::getAll);
@@ -39,25 +38,11 @@ public class App extends AbstractVerticle {
         router.get("/api/whiskies").handler(this::getAll);
         router.put("/api/entities/:id").handler(this::updateEntity);
         router.delete("/api/entities/:id").handler(this::deleteEntity);
+
         vertx
                 .createHttpServer()
                 .requestHandler(router)
                 .listen(8081);
-    }
-
-    private void addRandomStuff() {
-        //testing stuff
-        BaseEntity firt = BaseEntity.Builder.newInstance()
-                .setId("unique id")
-                .addData("first", "try")
-                .build();
-        BaseEntity ent = BaseEntity.Builder.newInstance()
-                .setId("unique id")
-                .addData("second", "try").
-                        addSubEntity(firt).
-                        build();
-        entities.add(ent);
-
     }
 
     private void getAll(RoutingContext routingContext) {
@@ -92,7 +77,7 @@ public class App extends AbstractVerticle {
     }
 
     private void getEntity(RoutingContext routingContext) {
-        final String id = routingContext.request().getParam("id");
+        String id = routingContext.request().getParam("id");
         if (id == null) {
            Error("received a get request with no id");
             routingContext.response().setStatusCode(400).end();
@@ -112,12 +97,13 @@ public class App extends AbstractVerticle {
     }
 
     private void updateEntity(RoutingContext routingContext) {
-        final String id = routingContext.request().getParam("id");
+        String id = routingContext.request().getParam("id");
         JsonObject json = routingContext.getBodyAsJson();
         if (id == null || json == null) {
+            Error("Received an update request that couldnt be parsed");
             routingContext.response().setStatusCode(400).end();
         } else {
-
+            Log(String.format("Received an update request for %s", id));
             for (Entity entity : entities) {
                 if (entity.getID().equals(id)) {
                     try {
@@ -133,15 +119,18 @@ public class App extends AbstractVerticle {
                     }
                 }
             }
+            Error("Could not find requested entity");
             routingContext.response().setStatusCode(404).end();
-
         }
     }
+
     private void deleteEntity(RoutingContext routingContext) {
         String id = routingContext.request().getParam("id");
         if (id == null) {
+            Error("Received a delete request that couldnt be parsed");
             routingContext.response().setStatusCode(400).end();
         } else {
+            Log(String.format("Received a delete request for %s", id));
             entities.removeIf(element -> element.getID().equals(id));
         }
         routingContext.response().setStatusCode(204).end();
