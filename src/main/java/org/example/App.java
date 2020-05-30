@@ -42,7 +42,7 @@ public class App extends AbstractVerticle {
         vertx
                 .createHttpServer()
                 .requestHandler(router)
-                .listen(8081);
+                .listen(8080);
     }
 
     private void getAll(RoutingContext routingContext) {
